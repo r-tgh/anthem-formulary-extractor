@@ -32,7 +32,7 @@ def print_summary(
         print(f"  - Excel file saved to: {excel_output_path}")
 
     print(f"\nSummary:")
-    print(f"  - TOC entries found: {len(data['table_of_contents'])}")
+    print(f"  - ToC entries found: {len(data['table_of_contents'])}")
     print(f"  - Categories found: {len(data['categories'])}")
     print(f"  - Total subcategories: {total_subcategories}")
     print(f"  - Total rows extracted: {total_rows}")
@@ -42,12 +42,12 @@ def print_summary(
     # Validation checks
     print(f"\nValidation:")
 
-    # Check 1: TOC entries should match categories found
+    # Check 1: ToC entries should match categories found
     toc_count = len(data["table_of_contents"])
     categories_count = len(data["categories"])
     toc_match = toc_count == categories_count
     print(
-        f"  - TOC entries ({toc_count}) == Categories found ({categories_count}) {'✓' if toc_match else '✗'}"
+        f"  - ToC entries ({toc_count}) == Categories found ({categories_count}) {'✓' if toc_match else '✗'}"
     )
 
     # Check 2: Total rows processed should equal sum of all components

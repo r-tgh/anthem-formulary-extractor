@@ -38,7 +38,7 @@ def extract_table_of_contents(pdf_path):
             found_any_match = False
 
             for line in lines:
-                # Check if this is the TOC start marker
+                # Check if this is the ToC start marker
                 if "Table of Contents" in line:
                     found_toc = True
                     if DEBUG_MODE:
@@ -47,7 +47,7 @@ def extract_table_of_contents(pdf_path):
                 # Match lines with format: *CATEGORY NAME*....page_number
                 match = re.search(r"\*(.+?)\*\.+(\d+)", line)
                 if match:
-                    found_toc = True  # If we find TOC pattern, we're in TOC
+                    found_toc = True  # If we find ToC pattern, we're in ToC
                     category_name = clean_text(match.group(1))
                     page_no = int(match.group(2))
                     categories[category_name] = page_no
@@ -55,11 +55,11 @@ def extract_table_of_contents(pdf_path):
                         print(f"  Found category: {category_name} -> Page {page_no}")
                     found_any_match = True
 
-            # If we've found TOC before but no matches on this page, stop
+            # If we've found ToC before but no matches on this page, stop
             if found_toc and not found_any_match and categories:
                 if DEBUG_MODE:
                     print(
-                        f"  No more TOC entries found on page {page_num}, stopping TOC extraction"
+                        f"  No more ToC entries found on page {page_num}, stopping ToC extraction"
                     )
                 break
 
@@ -70,7 +70,7 @@ def is_category(text, toc_categories=None):
     """
     Check if text is a category by:
     1. Must be enclosed in * and *
-    2. Must have a close match in the TOC
+    2. Must have a close match in the ToC
     """
     cleaned = clean_text(text)
 
@@ -78,7 +78,7 @@ def is_category(text, toc_categories=None):
     if not re.match(r"^\*(.+?)\*$", cleaned):
         return False
 
-    # If no TOC provided, we can't determine if it's a category
+    # If no ToC provided, we can't determine if it's a category
     if not toc_categories:
         return False
 
@@ -105,7 +105,7 @@ def is_subcategory(text, toc_categories=None):
     """
     Check if text is a subcategory by:
     1. FIRST PRIORITY: If enclosed in * and *** (or ** *, * **), it's ALWAYS a subcategory
-    2. SECOND PRIORITY: If simple * and *, check if it has TOC match (category) or not (subcategory)
+    2. SECOND PRIORITY: If simple * and *, check if it has ToC match (category) or not (subcategory)
     """
     cleaned = clean_text(text)
 
@@ -117,10 +117,10 @@ def is_subcategory(text, toc_categories=None):
 
     # SECOND PRIORITY: Check simple * and * format
     if re.match(r"^\*(.+?)\*$", cleaned):
-        # If it matches category criteria (TOC match), it's not a subcategory
+        # If it matches category criteria (ToC match), it's not a subcategory
         if is_category(text, toc_categories):
             return False
-        # If it doesn't match TOC, it's a subcategory
+        # If it doesn't match ToC, it's a subcategory
         return True
 
     # If it doesn't match any asterisk patterns, it's not a subcategory
@@ -128,7 +128,7 @@ def is_subcategory(text, toc_categories=None):
 
 
 def extract_category_name(text, toc_categories=None):
-    """Extract category name from *CATEGORY* format and find closest TOC match"""
+    """Extract category name from *CATEGORY* format and find closest ToC match"""
     cleaned = clean_text(text)
     match = re.match(r"^\*(.+?)\*$", cleaned)
     if not match:
@@ -136,7 +136,7 @@ def extract_category_name(text, toc_categories=None):
 
     extracted_name = match.group(1).strip()
 
-    # If no TOC provided, return as-is
+    # If no ToC provided, return as-is
     if not toc_categories:
         return extracted_name
 
@@ -235,7 +235,7 @@ def extract_structured_data(pdf_path):
 
     if DEBUG_MODE:
         print(f"\nStarting extraction from page {start_page}")
-        print(f"Last TOC page: {last_toc_page}")
+        print(f"Last ToC page: {last_toc_page}")
 
     categories = []
     current_category = None
@@ -395,7 +395,7 @@ def main():
     with open(warnings_file, "w", encoding="utf-8") as f:
         json.dump(data["warnings"], f, indent=2, ensure_ascii=False)
 
-    # Save TOC to separate file
+    # Save ToC to separate file
     toc_file = output_dir / "table_of_contents.json"
     with open(toc_file, "w", encoding="utf-8") as f:
         json.dump(data["table_of_contents"], f, indent=2, ensure_ascii=False)
@@ -408,7 +408,7 @@ def main():
         print(f"  - Table of Contents saved to: {toc_file}")
 
         print(f"\nSummary:")
-        print(f"  - TOC entries found: {len(data['table_of_contents'])}")
+        print(f"  - ToC entries found: {len(data['table_of_contents'])}")
         print(f"  - Categories found: {len(data['categories'])}")
         print(f"  - Warnings (skipped rows): {len(data['warnings'])}")
 

@@ -197,13 +197,19 @@ The tool works with Anthem's pharmaceutical formulary PDFs with this structure:
 
 ### Extraction Process
 
-1. **TOC Extraction**: Scans pages for table of contents entries
-2. **Category Detection**: Identifies category markers (`*TEXT*`)
-3. **Subcategory Detection**: Identifies subcategory markers (`*TEXT***`)
-4. **Table Extraction**: Extracts tables from each page, sorting left-to-right
-5. **Data Cleaning**:
+1. **ToC Extraction**: Scans pages for table of contents entries using `*CATEGORY*....page_number` pattern
+2. **Table Extraction**: Extracts tables from each page, sorting left-to-right for proper column alignment
+3. **Row Classification**: Uses a priority-based system to classify each table row:
+    - **Priority 1**: `*TEXT***` patterns (trailing asterisks/spaces) → Always subcategories
+    - **Priority 2**: `*TEXT*` patterns → Categories if `TEXT` matches with a ToC entry, subcategories otherwise
+    - Non-asterisk rows with tier/notes data → Drug entries
+4. **Data Cleaning**:
     - Replaces newlines with spaces
     - Fixes split hyphenated words (e.g., "hyper- tension" → "hyper-tension")
-    - Normalizes whitespace
-6. **Fuzzy Matching**: Matches extracted categories to TOC entries for consistency
-7. **Hierarchical Organization**: Builds nested JSON structure
+    - Normalizes whitespace and removes extra characters
+5. **Fuzzy Matching**: Uses difflib to match extracted `*TEXT*` patterns to ToC entries (80% similarity threshold)
+6. **Validation & Quality Control**:
+    - Tracks total rows processed vs. extracted, for debugging
+    - Validates if ToC entries match the categories found
+    - Reports warnings for orphaned rows without proper category/subcategory context
+7. **Hierarchical Organization**: Builds nested JSON structure with categories → subcategories → drug rows
