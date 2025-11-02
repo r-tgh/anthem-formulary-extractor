@@ -25,7 +25,7 @@ def main():
     parser.add_argument(
         "pdf_path",
         nargs="?",
-        help="Path to a single PDF file to extract",
+        help="Path to the PDF file to process (optional if using --pdf-dir)",
     )
     parser.add_argument(
         "--pdf-dir",

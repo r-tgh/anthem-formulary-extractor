@@ -7,19 +7,21 @@ A Python tool for extracting pharmaceutical formulary data provided by [Anthem](
 ```
 /
 ├── src/
-│   ├── extract_pdf_tables.py    # PDF extraction script
-│   └── create_excel_file.py     # Excel file creation script
+│   ├── config.py                   # Global configuration (DEBUG_MODE)
+│   ├── extract_pdf_tables.py       # PDF extraction script
+│   ├── create_excel_file.py        # Excel file creation script
+│   └── process_pdf.py              # PDF processing module
 ├── example/
 │   └── Essential_5_Tier_ABCBS.pdf  # Example pharmaceutical formulary PDF
-├── output/                       # Default output directory (gitignored)
-│   └── PDFFILENAME/              # Organized by PDF filename
+├── output/                         # Default output directory (gitignored)
+│   └── PDFFILENAME/                # Organized by PDF filename
 │       ├── extracted_data.json
 │       ├── extraction_warnings.json
 │       ├── table_of_contents.json
-│       └── PDFFILENAME.xlsx      # Excel output with multiple sheets
-├── .venv/                        # Python virtual environment (gitignored)
-├── main.py                       # Main pipeline script
-├── requirements.txt              # Python dependencies
+│       └── PDFFILENAME.xlsx        # Excel output with multiple sheets
+├── .venv/                          # Python virtual environment (gitignored)
+├── main.py                         # Main pipeline script
+├── requirements.txt                # Python dependencies
 ├── .gitignore
 └── README.md
 ```
@@ -56,19 +58,27 @@ A Python tool for extracting pharmaceutical formulary data provided by [Anthem](
 
 ## Usage
 
-### Full Pipeline (PDF → JSON + Excel)
+### Single PDF Processing
 
-Extract data from PDF and automatically create Excel file with multiple sheets:
+Extract data from a single PDF and automatically create Excel file with multiple sheets:
 
 ```bash
-# Make sure virtual environment is activated first
-# source .venv/Scripts/activate  # Windows Git Bash
-# source .venv/bin/activate    # macOS/Linux
-
 python main.py example/Essential_5_Tier_ABCBS.pdf -o example/output/
 ```
 
-This will create output in `example/output/PDFFILENAME/`:
+### Batch Processing Multiple PDFs
+
+Process all PDF files in a directory:
+
+```bash
+python main.py --pdf-dir example/ -o example/output/
+```
+
+This will process all PDF files found in the specified directory and create separate output folders for each.
+
+### Output Structure
+
+Both single and batch processing create output in `example/output/PDFFILENAME/`:
 
 -   `extracted_data.json` - Main structured data
 -   `extraction_warnings.json` - Any skipped/problematic rows
@@ -78,12 +88,12 @@ This will create output in `example/output/PDFFILENAME/`:
 ### Command-line Options
 
 ```
-usage: main.py [-h] [-o OUTPUT_DIR] [--json-only] [--excel-only] [--json-path JSON_PATH] pdf_path
+usage: main.py [-h] [-o OUTPUT_DIR] [--json-only] [--excel-only] [--json-path JSON_PATH] [--pdf-dir PDF_DIR] [pdf_path]
 
 Extract pharmaceutical formulary data from PDF and create Excel file.
 
 positional arguments:
-  pdf_path              Path to the PDF file to extract
+  pdf_path              Path to the PDF file to process (optional if using --pdf-dir)
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -92,7 +102,18 @@ optional arguments:
   --json-only           Only extract JSON, skip Excel creation
   --excel-only          Only create Excel from existing JSON (requires --json-path)
   --json-path JSON_PATH Path to existing JSON file (for --excel-only mode)
+  --pdf-dir PDF_DIR     Path to a directory containing PDF files to process
 ```
+
+## Configuration
+
+### Debug Mode
+
+The tool runs quietly by default, showing only essential output and final summaries. To enable detailed debug logging:
+
+1. Open `src/config.py`
+2. Change `DEBUG_MODE = False` to `DEBUG_MODE = True`
+3. Run the tool to see detailed extraction progress, table processing, and step-by-step information
 
 ## Output Format
 
