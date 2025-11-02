@@ -3,6 +3,7 @@ from pathlib import Path
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
+from config import DEBUG_MODE
 
 
 def create_excel_from_json(json_path, output_path):
@@ -55,7 +56,8 @@ def create_excel_from_json(json_path, output_path):
     # Freeze the header row so it stays visible when scrolling
     categories_sheet.freeze_panes = "A2"
 
-    print(f"\nCreating Excel file with {len(categories_data)} categories...")
+    if DEBUG_MODE:
+        print(f"\nCreating Excel file with {len(categories_data)} categories...")
 
     # Process each category
     for idx, category in enumerate(categories_data, start=2):
@@ -155,14 +157,16 @@ def create_excel_from_json(json_path, output_path):
 
                 current_row += 1
 
-        print(
-            f"  Created sheet: {sheet_name} ({len(subcategories)} subcategories, {total_drugs} drugs)"
-        )
+        if DEBUG_MODE:
+            print(
+                f"  Created sheet: {sheet_name} ({len(subcategories)} subcategories, {total_drugs} drugs)"
+            )
 
     # Save the workbook
     wb.save(output_path)
-    print(f"\nExcel file saved to: {output_path}")
-    print(f"  Total sheets created: {len(wb.sheetnames)}")
+    if DEBUG_MODE:
+        print(f"\nExcel file saved to: {output_path}")
+        print(f"  Total sheets created: {len(wb.sheetnames)}")
 
     return output_path
 

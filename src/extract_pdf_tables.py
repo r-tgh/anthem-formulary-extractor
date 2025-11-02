@@ -4,6 +4,7 @@ import re
 import argparse
 import os
 from pathlib import Path
+from config import DEBUG_MODE
 
 
 def clean_text(text):
@@ -40,7 +41,8 @@ def extract_table_of_contents(pdf_path):
                 # Check if this is the TOC start marker
                 if "Table of Contents" in line:
                     found_toc = True
-                    print(f"Found Table of Contents on page {page_num}")
+                    if DEBUG_MODE:
+                        print(f"Found Table of Contents on page {page_num}")
 
                 # Match lines with format: *CATEGORY NAME*....page_number
                 match = re.search(r"\*(.+?)\*\.+(\d+)", line)
@@ -49,14 +51,16 @@ def extract_table_of_contents(pdf_path):
                     category_name = clean_text(match.group(1))
                     page_no = int(match.group(2))
                     categories[category_name] = page_no
-                    print(f"  Found category: {category_name} -> Page {page_no}")
+                    if DEBUG_MODE:
+                        print(f"  Found category: {category_name} -> Page {page_no}")
                     found_any_match = True
 
             # If we've found TOC before but no matches on this page, stop
             if found_toc and not found_any_match and categories:
-                print(
-                    f"  No more TOC entries found on page {page_num}, stopping TOC extraction"
-                )
+                if DEBUG_MODE:
+                    print(
+                        f"  No more TOC entries found on page {page_num}, stopping TOC extraction"
+                    )
                 break
 
     return categories
@@ -69,30 +73,31 @@ def is_category(text, toc_categories=None):
     2. Must have a close match in the TOC
     """
     cleaned = clean_text(text)
-    
+
     # Check if it's enclosed in asterisks (simple * and *)
     if not re.match(r"^\*(.+?)\*$", cleaned):
         return False
-    
+
     # If no TOC provided, we can't determine if it's a category
     if not toc_categories:
         return False
-    
+
     # Extract the content between asterisks
     match = re.match(r"^\*(.+?)\*$", cleaned)
     if not match:
         return False
-    
+
     extracted_name = match.group(1).strip()
-    
+
     # Check for exact match first
     if extracted_name in toc_categories:
         return True
-    
+
     # Check for close match using fuzzy matching
     from difflib import get_close_matches
+
     close_matches = get_close_matches(extracted_name, toc_categories, n=1, cutoff=0.8)
-    
+
     return len(close_matches) > 0
 
 
@@ -103,13 +108,13 @@ def is_subcategory(text, toc_categories=None):
     2. SECOND PRIORITY: If simple * and *, check if it has TOC match (category) or not (subcategory)
     """
     cleaned = clean_text(text)
-    
+
     # FIRST PRIORITY: Check for * and *** patterns (ALWAYS subcategory)
     # Match patterns like: *SUBCATEGORY***, *SUBCATEGORY** *, *SUBCATEGORY* **
     if re.match(r"^\*(.+?)\*[\s*]+$", cleaned):
         # If it has trailing asterisks/spaces after the closing *, it's ALWAYS a subcategory
         return True
-    
+
     # SECOND PRIORITY: Check simple * and * format
     if re.match(r"^\*(.+?)\*$", cleaned):
         # If it matches category criteria (TOC match), it's not a subcategory
@@ -117,7 +122,7 @@ def is_subcategory(text, toc_categories=None):
             return False
         # If it doesn't match TOC, it's a subcategory
         return True
-    
+
     # If it doesn't match any asterisk patterns, it's not a subcategory
     return False
 
@@ -154,14 +159,14 @@ def extract_category_name(text, toc_categories=None):
 def extract_subcategory_name(text):
     """Extract subcategory name from *SUBCATEGORY* or *SUBCATEGORY*** format"""
     cleaned = clean_text(text)
-    
+
     # Match anything that starts with * and has content before the next *
     # Then optionally followed by more asterisks and spaces
     match = re.match(r"^\*(.+?)\*.*$", cleaned)
     if match:
         # Just return the content between the first * and first closing *
         return match.group(1).strip()
-    
+
     return None
 
 
@@ -199,7 +204,7 @@ def classify_row(row_data, toc_categories=None):
     drug_name = row_data["drug_name"]
     tier = row_data["tier"]
     notes = row_data["notes"]
-    
+
     # Only check for category/subcategory if tier and notes columns are empty
     # Categories and subcategories should not have tier or notes data
     if not tier.strip() and not notes.strip():
@@ -208,7 +213,7 @@ def classify_row(row_data, toc_categories=None):
             return "subcategory", extract_subcategory_name(drug_name)
         elif is_category(drug_name, toc_categories):
             return "category", extract_category_name(drug_name, toc_categories)
-    
+
     # If tier/notes are not empty, or if it doesn't match category/subcategory patterns, it's a drug
     return "drug", row_data
 
@@ -228,8 +233,9 @@ def extract_structured_data(pdf_path):
     start_page = min(toc.values()) if toc else 1
     last_toc_page = max(toc.values()) if toc else 1
 
-    print(f"\nStarting extraction from page {start_page}")
-    print(f"Last TOC page: {last_toc_page}")
+    if DEBUG_MODE:
+        print(f"\nStarting extraction from page {start_page}")
+        print(f"Last TOC page: {last_toc_page}")
 
     categories = []
     current_category = None
@@ -242,23 +248,26 @@ def extract_structured_data(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
         for page_num in range(start_page, len(pdf.pages) + 1):
             page = pdf.pages[page_num - 1]
-            print(f"\nProcessing page {page_num}...")
+            if DEBUG_MODE:
+                print(f"\nProcessing page {page_num}...")
 
             tables = extract_tables_from_page(page)
 
             if not tables:
                 consecutive_pages_without_tables += 1
-                print(
-                    f"  No tables found ({consecutive_pages_without_tables}/{max_pages_without_tables})"
-                )
+                if DEBUG_MODE:
+                    print(
+                        f"  No tables found ({consecutive_pages_without_tables}/{max_pages_without_tables})"
+                    )
 
                 if (
                     page_num > last_toc_page
                     and consecutive_pages_without_tables >= max_pages_without_tables
                 ):
-                    print(
-                        f"  Stopping extraction - no tables for {max_pages_without_tables} consecutive pages"
-                    )
+                    if DEBUG_MODE:
+                        print(
+                            f"  Stopping extraction - no tables for {max_pages_without_tables} consecutive pages"
+                        )
                     break
                 continue
 
@@ -278,7 +287,8 @@ def extract_structured_data(pdf_path):
                         current_category = {"categoryName": value, "subCategories": []}
                         categories.append(current_category)
                         current_subcategory = None
-                        print(f"  > Category: {value}")
+                        if DEBUG_MODE:
+                            print(f"  > Category: {value}")
 
                     elif row_type == "subcategory":
                         # Start a new subcategory within current category
@@ -293,7 +303,8 @@ def extract_structured_data(pdf_path):
 
                         current_subcategory = {"subCategoryName": value, "rows": []}
                         current_category["subCategories"].append(current_subcategory)
-                        print(f"    > Subcategory: {value}")
+                        if DEBUG_MODE:
+                            print(f"    > Subcategory: {value}")
 
                     elif row_type == "drug":
                         # Add drug row to current subcategory
@@ -314,9 +325,10 @@ def extract_structured_data(pdf_path):
                                 "page": row_data["page"],
                             }
                         )
-                        print(
-                            f"      Row: [{row_data['drug_name']}, {row_data['tier']}, {row_data['notes']}]"
-                        )
+                        if DEBUG_MODE:
+                            print(
+                                f"      Row: [{row_data['drug_name']}, {row_data['tier']}, {row_data['notes']}]"
+                            )
 
             # Print progress
             total_rows = sum(
@@ -324,7 +336,8 @@ def extract_structured_data(pdf_path):
                 for cat in categories
                 for subcat in cat["subCategories"]
             )
-            print(f"  Total rows extracted so far: {total_rows}")
+            if DEBUG_MODE:
+                print(f"  Total rows extracted so far: {total_rows}")
 
     return {"table_of_contents": toc, "categories": categories, "warnings": warnings}
 
@@ -356,11 +369,12 @@ def main():
     output_dir = Path(args.output_dir) / pdf_filename
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("Starting PDF extraction...")
-    print("=" * 80)
-    print(f"Input PDF: {args.pdf_path}")
-    print(f"Output directory: {output_dir}")
-    print("=" * 80)
+    if DEBUG_MODE:
+        print("Starting PDF extraction...")
+        print("=" * 80)
+        print(f"Input PDF: {args.pdf_path}")
+        print(f"Output directory: {output_dir}")
+        print("=" * 80)
 
     data = extract_structured_data(args.pdf_path)
 
@@ -379,40 +393,43 @@ def main():
     with open(toc_file, "w", encoding="utf-8") as f:
         json.dump(data["table_of_contents"], f, indent=2, ensure_ascii=False)
 
-    print("\n" + "=" * 80)
-    print(f"Extraction complete!")
-    print(f"  - Categories saved to: {output_file}")
-    print(f"  - Warnings saved to: {warnings_file}")
-    print(f"  - Table of Contents saved to: {toc_file}")
+    if DEBUG_MODE:
+        print("\n" + "=" * 80)
+        print(f"Extraction complete!")
+        print(f"  - Categories saved to: {output_file}")
+        print(f"  - Warnings saved to: {warnings_file}")
+        print(f"  - Table of Contents saved to: {toc_file}")
 
-    print(f"\nSummary:")
-    print(f"  - TOC entries found: {len(data['table_of_contents'])}")
-    print(f"  - Categories found: {len(data['categories'])}")
-    print(f"  - Warnings (skipped rows): {len(data['warnings'])}")
+        print(f"\nSummary:")
+        print(f"  - TOC entries found: {len(data['table_of_contents'])}")
+        print(f"  - Categories found: {len(data['categories'])}")
+        print(f"  - Warnings (skipped rows): {len(data['warnings'])}")
 
-    # Count total subcategories and rows
-    total_subcategories = sum(len(cat["subCategories"]) for cat in data["categories"])
-    total_rows = sum(
-        len(subcat["rows"])
-        for cat in data["categories"]
-        for subcat in cat["subCategories"]
-    )
+        # Count total subcategories and rows
+        total_subcategories = sum(
+            len(cat["subCategories"]) for cat in data["categories"]
+        )
+        total_rows = sum(
+            len(subcat["rows"])
+            for cat in data["categories"]
+            for subcat in cat["subCategories"]
+        )
 
-    print(f"  - Total subcategories: {total_subcategories}")
-    print(f"  - Total rows extracted: {total_rows}")
+        print(f"  - Total subcategories: {total_subcategories}")
+        print(f"  - Total rows extracted: {total_rows}")
 
-    # Show sample structure
-    print(f"\nSample structure:")
-    for i, category in enumerate(data["categories"][:2]):
-        print(f"\n  Category: {category['categoryName']}")
-        for subcat in category["subCategories"][:2]:
-            print(f"    Subcategory: {subcat['subCategoryName']}")
-            if subcat["rows"]:
-                first_row = subcat["rows"][0]
-                print(
-                    f"      First row: {first_row['drug_name']} (page {first_row['page']})"
-                )
-                print(f"      Total rows in subcategory: {len(subcat['rows'])}")
+        # Show sample structure
+        print(f"\nSample structure:")
+        for i, category in enumerate(data["categories"][:2]):
+            print(f"\n  Category: {category['categoryName']}")
+            for subcat in category["subCategories"][:2]:
+                print(f"    Subcategory: {subcat['subCategoryName']}")
+                if subcat["rows"]:
+                    first_row = subcat["rows"][0]
+                    print(
+                        f"      First row: {first_row['drug_name']} (page {first_row['page']})"
+                    )
+                    print(f"      Total rows in subcategory: {len(subcat['rows'])}")
 
     return 0
 
