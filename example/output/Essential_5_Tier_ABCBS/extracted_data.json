@@ -5628,15 +5628,14 @@
             "tier": "1 or 1b*",
             "notes": "",
             "page": 29
-          },
-          {
-            "drug_name": "*ANTI-INFECTIVE AGENTS - MISC.*",
-            "tier": "",
-            "notes": "",
-            "page": 29
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "ANTI-INFECTIVE AGENTS - MISC.",
+    "subCategories": [
       {
         "subCategoryName": "ANTI-INFECTIVE AGENTS - MISC.",
         "rows": [
@@ -8701,15 +8700,14 @@
             "tier": "1 or 1b*",
             "notes": "",
             "page": 40
-          },
-          {
-            "drug_name": "*CARDIOVASCULAR AGENTS - MISC.*",
-            "tier": "",
-            "notes": "",
-            "page": 40
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "CARDIOVASCULAR AGENTS - MISC.",
+    "subCategories": [
       {
         "subCategoryName": "CALCIUM CHANNEL BLOCKER & HMG COA REDUCTASE INHIBIT COMB",
         "rows": [
@@ -12408,15 +12406,14 @@
             "tier": "1 or 1b*",
             "notes": "",
             "page": 52
-          },
-          {
-            "drug_name": "*ENDOCRINE AND METABOLIC AGENTS - MISC.*",
-            "tier": "",
-            "notes": "",
-            "page": 52
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "ENDOCRINE AND METABOLIC AGENTS - MISC.",
+    "subCategories": [
       {
         "subCategoryName": "ABORTIFACIENT - PROGESTERONE RECEPTOR ANTAGONISTS",
         "rows": [
@@ -13093,15 +13090,14 @@
             "tier": "1 or 1b*",
             "notes": "",
             "page": 54
-          },
-          {
-            "drug_name": "*GASTROINTESTINAL AGENTS - MISC.*",
-            "tier": "",
-            "notes": "",
-            "page": 54
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "GASTROINTESTINAL AGENTS - MISC.",
+    "subCategories": [
       {
         "subCategoryName": "5-HT4 RECEPTOR AGONISTS",
         "rows": [
@@ -13710,15 +13706,14 @@
             "tier": "1 or 1b*",
             "notes": "",
             "page": 57
-          },
-          {
-            "drug_name": "*HEMATOLOGICAL AGENTS - MISC.*",
-            "tier": "",
-            "notes": "",
-            "page": 57
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "HEMATOLOGICAL AGENTS - MISC.",
+    "subCategories": [
       {
         "subCategoryName": "BRADYKININ B2 RECEPTOR ANTAGONISTS",
         "rows": [
@@ -17009,15 +17004,14 @@
             "tier": "1 or 1b*",
             "notes": "QL",
             "page": 69
-          },
-          {
-            "drug_name": "*MINERALS & ELECTROLYTES*",
-            "tier": "",
-            "notes": "",
-            "page": 70
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "MINERALS & ELECTROLYTES",
+    "subCategories": [
       {
         "subCategoryName": "BICARBONATES",
         "rows": [
@@ -20003,15 +19997,14 @@
             "tier": "1 or 1b*",
             "notes": "",
             "page": 80
-          },
-          {
-            "drug_name": "*PSYCHOTHERAPEUTI C AND NEUROLOGICAL AGENTS - MISC.*",
-            "tier": "",
-            "notes": "",
-            "page": 81
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "PSYCHOTHERAPEUTIC AND NEUROLOGICAL AGENTS - MISC.",
+    "subCategories": [
       {
         "subCategoryName": "AGENTS FOR OPIOID WITHDRAWAL",
         "rows": [
@@ -20857,15 +20850,14 @@
             "tier": "1 or 1b*",
             "notes": "",
             "page": 84
-          },
-          {
-            "drug_name": "*RESPIRATORY AGENTS - MISC.*",
-            "tier": "",
-            "notes": "",
-            "page": 84
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "categoryName": "RESPIRATORY AGENTS - MISC.",
+    "subCategories": [
       {
         "subCategoryName": "CYSTIC FIBROSIS AGENT - COMBINATIONS",
         "rows": [

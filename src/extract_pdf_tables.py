@@ -43,7 +43,7 @@ def extract_table_of_contents(pdf_path):
                     print(f"Found Table of Contents on page {page_num}")
 
                 # Match lines with format: *CATEGORY NAME*....page_number
-                match = re.search(r"\*([A-Z\/\-\s]+)\*\.+(\d+)", line)
+                match = re.search(r"\*(.+?)\*\.+(\d+)", line)
                 if match:
                     found_toc = True  # If we find TOC pattern, we're in TOC
                     category_name = clean_text(match.group(1))
@@ -62,26 +62,70 @@ def extract_table_of_contents(pdf_path):
     return categories
 
 
-def is_category(text):
-    """Check if text is a category (format: *CATEGORY*)"""
-    cleaned = clean_text(text)
-    return bool(re.match(r"^\*([A-Z\/\-\s]+)\*$", cleaned))
-
-
-def is_subcategory(text):
+def is_category(text, toc_categories=None):
     """
-    Check if text is a subcategory (format: *SUBCATEGORY***)
-    The ending can be ***, ** *, or * ** due to newline artifacts
+    Check if text is a category by:
+    1. Must be enclosed in * and *
+    2. Must have a close match in the TOC
     """
     cleaned = clean_text(text)
-    # Match: starts with *, has content, ends with 2+ asterisks (with optional spaces between)
-    return bool(re.match(r"^\*(.+?)\*[\s*]+$", cleaned))
+    
+    # Check if it's enclosed in asterisks (simple * and *)
+    if not re.match(r"^\*(.+?)\*$", cleaned):
+        return False
+    
+    # If no TOC provided, we can't determine if it's a category
+    if not toc_categories:
+        return False
+    
+    # Extract the content between asterisks
+    match = re.match(r"^\*(.+?)\*$", cleaned)
+    if not match:
+        return False
+    
+    extracted_name = match.group(1).strip()
+    
+    # Check for exact match first
+    if extracted_name in toc_categories:
+        return True
+    
+    # Check for close match using fuzzy matching
+    from difflib import get_close_matches
+    close_matches = get_close_matches(extracted_name, toc_categories, n=1, cutoff=0.8)
+    
+    return len(close_matches) > 0
+
+
+def is_subcategory(text, toc_categories=None):
+    """
+    Check if text is a subcategory by:
+    1. FIRST PRIORITY: If enclosed in * and *** (or ** *, * **), it's ALWAYS a subcategory
+    2. SECOND PRIORITY: If simple * and *, check if it has TOC match (category) or not (subcategory)
+    """
+    cleaned = clean_text(text)
+    
+    # FIRST PRIORITY: Check for * and *** patterns (ALWAYS subcategory)
+    # Match patterns like: *SUBCATEGORY***, *SUBCATEGORY** *, *SUBCATEGORY* **
+    if re.match(r"^\*(.+?)\*[\s*]+$", cleaned):
+        # If it has trailing asterisks/spaces after the closing *, it's ALWAYS a subcategory
+        return True
+    
+    # SECOND PRIORITY: Check simple * and * format
+    if re.match(r"^\*(.+?)\*$", cleaned):
+        # If it matches category criteria (TOC match), it's not a subcategory
+        if is_category(text, toc_categories):
+            return False
+        # If it doesn't match TOC, it's a subcategory
+        return True
+    
+    # If it doesn't match any asterisk patterns, it's not a subcategory
+    return False
 
 
 def extract_category_name(text, toc_categories=None):
     """Extract category name from *CATEGORY* format and find closest TOC match"""
     cleaned = clean_text(text)
-    match = re.match(r"^\*([A-Z\/\-\s]+)\*$", cleaned)
+    match = re.match(r"^\*(.+?)\*$", cleaned)
     if not match:
         return None
 
@@ -98,7 +142,7 @@ def extract_category_name(text, toc_categories=None):
     # Find closest match using fuzzy matching
     from difflib import get_close_matches
 
-    close_matches = get_close_matches(extracted_name, toc_categories, n=1, cutoff=0.6)
+    close_matches = get_close_matches(extracted_name, toc_categories, n=1, cutoff=0.8)
 
     if close_matches:
         return close_matches[0]
@@ -108,14 +152,16 @@ def extract_category_name(text, toc_categories=None):
 
 
 def extract_subcategory_name(text):
-    """Extract subcategory name from *SUBCATEGORY*** format"""
+    """Extract subcategory name from *SUBCATEGORY* or *SUBCATEGORY*** format"""
     cleaned = clean_text(text)
-    # Match and extract, then remove trailing asterisks and spaces
-    match = re.match(r"^\*(.+?)\*[\s*]+$", cleaned)
+    
+    # Match anything that starts with * and has content before the next *
+    # Then optionally followed by more asterisks and spaces
+    match = re.match(r"^\*(.+?)\*.*$", cleaned)
     if match:
-        name = match.group(1).strip()
-        # Remove any trailing asterisks that might have been captured
-        return name.rstrip("* ")
+        # Just return the content between the first * and first closing *
+        return match.group(1).strip()
+    
     return None
 
 
@@ -151,13 +197,20 @@ def process_row(row, page_num):
 def classify_row(row_data, toc_categories=None):
     """Classify a row as category, subcategory, or regular drug row."""
     drug_name = row_data["drug_name"]
-
-    if is_category(drug_name):
-        return "category", extract_category_name(drug_name, toc_categories)
-    elif is_subcategory(drug_name):
-        return "subcategory", extract_subcategory_name(drug_name)
-    else:
-        return "drug", row_data
+    tier = row_data["tier"]
+    notes = row_data["notes"]
+    
+    # Only check for category/subcategory if tier and notes columns are empty
+    # Categories and subcategories should not have tier or notes data
+    if not tier.strip() and not notes.strip():
+        # Check subcategory first (handles both *** priority and simple * * patterns)
+        if is_subcategory(drug_name, toc_categories):
+            return "subcategory", extract_subcategory_name(drug_name)
+        elif is_category(drug_name, toc_categories):
+            return "category", extract_category_name(drug_name, toc_categories)
+    
+    # If tier/notes are not empty, or if it doesn't match category/subcategory patterns, it's a drug
+    return "drug", row_data
 
 
 def extract_tables_from_page(page):
